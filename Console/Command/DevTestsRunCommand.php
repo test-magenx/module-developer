@@ -105,8 +105,6 @@ class DevTestsRunCommand extends Command
             }
             $message = $dirName . '> ' . $command;
             $output->writeln(['', str_pad("---- {$message} ", 70, '-'), '']);
-            // passthru() call have to be here.
-            // phpcs:ignore Magento2.Security.InsecureFunction
             passthru($command, $returnVal);
             if ($returnVal) {
                 $failures[] = $message;
