@@ -23,17 +23,17 @@ class XmlCatalogGenerateCommandTest extends TestCase
      */
     private $command;
 
-    /**
-     * @return void
-     */
-    public function testExecuteBadType(): void
+    public function testExecuteBadType()
     {
         $fixtureXmlFile = __DIR__ . '/_files/test.xml';
 
         $filesMock = $this->createPartialMock(Files::class, ['getXmlCatalogFiles']);
-        $filesMock
+        $filesMock->expects($this->at(0))
             ->method('getXmlCatalogFiles')
-            ->willReturnOnConsecutiveCalls([[$fixtureXmlFile]], []);
+            ->willReturn([[$fixtureXmlFile]]);
+        $filesMock->expects($this->at(1))
+            ->method('getXmlCatalogFiles')
+            ->willReturn([]);
         $urnResolverMock = $this->createMock(UrnResolver::class);
         $urnResolverMock->expects($this->once())
             ->method('getRealPath')
@@ -74,17 +74,17 @@ class XmlCatalogGenerateCommandTest extends TestCase
         $this->assertEquals('', $commandTester->getDisplay());
     }
 
-    /**
-     * @return void
-     */
-    public function testExecuteVsCodeFormat(): void
+    public function testExecuteVsCodeFormat()
     {
         $fixtureXmlFile = __DIR__ . '/_files/test.xml';
 
         $filesMock = $this->createPartialMock(Files::class, ['getXmlCatalogFiles']);
-        $filesMock
+        $filesMock->expects($this->at(0))
             ->method('getXmlCatalogFiles')
-            ->willReturnOnConsecutiveCalls([[$fixtureXmlFile]], []);
+            ->willReturn([[$fixtureXmlFile]]);
+        $filesMock->expects($this->at(1))
+            ->method('getXmlCatalogFiles')
+            ->willReturn([]);
         $urnResolverMock = $this->createMock(UrnResolver::class);
         $urnResolverMock->expects($this->once())
             ->method('getRealPath')
@@ -121,12 +121,10 @@ class XmlCatalogGenerateCommandTest extends TestCase
         );
 
         $commandTester = new CommandTester($this->command);
-        $commandTester->execute(
-            [
-                '--' . XmlCatalogGenerateCommand::IDE_OPTION => 'vscode',
-                XmlCatalogGenerateCommand::IDE_FILE_PATH_ARGUMENT => 'test'
-            ]
-        );
+        $commandTester->execute([
+            '--' . XmlCatalogGenerateCommand::IDE_OPTION => 'vscode',
+            XmlCatalogGenerateCommand::IDE_FILE_PATH_ARGUMENT => 'test',
+        ]);
         $this->assertEquals('', $commandTester->getDisplay());
     }
 }

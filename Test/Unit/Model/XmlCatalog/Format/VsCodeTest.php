@@ -1,9 +1,8 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
 
 namespace Magento\Developer\Test\Unit\Model\XmlCatalog\Format;
 
@@ -47,9 +46,6 @@ class VsCodeTest extends TestCase
      */
     private $objectManagerHelper;
 
-    /**
-     * @inheritDoc
-     */
     protected function setUp(): void
     {
         $this->objectManagerHelper = new ObjectManager($this);
@@ -75,7 +71,7 @@ class VsCodeTest extends TestCase
             [
                 'readFactory' => $this->readFactoryMock,
                 'fileWriteFactory' => $this->fileWriteFactoryMock,
-                'domDocumentFactory' => $this->domFactory
+                'domDocumentFactory' => $this->domFactory,
             ]
         );
 
@@ -83,153 +79,183 @@ class VsCodeTest extends TestCase
     }
 
     /**
-     * Test generation of new valid catalog.
+     * Test generation of new valid catalog
      *
      * @param string $content
      * @param array $dictionary
-     *
-     * @return void
      * @dataProvider dictionaryDataProvider
+     * @return void
      */
-    public function testGenerateNewValidCatalog($content, $dictionary): void
+    public function testGenerateNewValidCatalog($content, $dictionary)
     {
         $configFile = 'test';
 
         $message = __("The \"%1.xml\" file doesn't exist.", $configFile);
+
+        $this->fileWriteFactoryMock->expects($this->at(0))
+            ->method('create')
+            ->with(
+                $configFile,
+                DriverPool::FILE,
+                VsCode::FILE_MODE_READ
+            )
+            ->willThrowException(new FileSystemException($message));
 
         $fileMock = $this->createMock(Write::class);
         $fileMock->expects($this->once())
             ->method('write')
             ->with($content);
 
-        $this->fileWriteFactoryMock
+        $this->fileWriteFactoryMock->expects($this->at(1))
             ->method('create')
-            ->withConsecutive(
-                [$configFile, DriverPool::FILE, VsCode::FILE_MODE_READ], [
+            ->with(
                 $configFile,
                 DriverPool::FILE,
                 VsCode::FILE_MODE_WRITE
-            ]
             )
-            ->willReturnOnConsecutiveCalls(
-                $this->throwException(new FileSystemException($message)),
-                $fileMock
-            );
+            ->willReturn($fileMock);
 
         $this->vscodeFormat->generateCatalog($dictionary, $configFile);
     }
 
     /**
-     * Test modify existing valid catalog.
+     * Test modify existing valid catalog
      *
      * @param string $content
      * @param array $dictionary
-     *
-     * @return void
      * @dataProvider dictionaryDataProvider
+     * @return void
      */
-    public function testGenerateExistingValidCatalog($content, $dictionary): void
+    public function testGenerateExistingValidCatalog($content, $dictionary)
     {
         $configFile = 'test';
 
-        $fileMock1 = $this->createMock(Read::class);
-        $fileMock1->expects($this->once())
+        $fileMock = $this->createMock(Read::class);
+        $fileMock->expects($this->once())
             ->method('readAll')
             ->withAnyParameters()
             ->willReturn($content);
 
-        $fileMock2 = $this->createMock(Write::class);
-        $fileMock2->expects($this->once())
+        $this->fileWriteFactoryMock->expects($this->at(0))
+            ->method('create')
+            ->with(
+                $configFile,
+                DriverPool::FILE,
+                VsCode::FILE_MODE_READ
+            )
+            ->willReturn($fileMock);
+
+        $fileMock = $this->createMock(Write::class);
+        $fileMock->expects($this->once())
             ->method('write')
             ->with($content);
 
-        $this->fileWriteFactoryMock
+        $this->fileWriteFactoryMock->expects($this->at(1))
             ->method('create')
-            ->withConsecutive(
-                [$configFile, DriverPool::FILE, VsCode::FILE_MODE_READ],
-                [$configFile, DriverPool::FILE, VsCode::FILE_MODE_WRITE]
+            ->with(
+                $configFile,
+                DriverPool::FILE,
+                VsCode::FILE_MODE_WRITE
             )
-            ->willReturnOnConsecutiveCalls($fileMock1, $fileMock2);
+            ->willReturn($fileMock);
 
         $this->vscodeFormat->generateCatalog($dictionary, $configFile);
     }
 
     /**
-     * Test modify existing empty catalog.
+     * Test modify existing empty catalog
      *
      * @param string $content
      * @param array $dictionary
-     *
-     * @return void
      * @dataProvider dictionaryDataProvider
+     * @return void
      */
-    public function testGenerateExistingEmptyValidCatalog($content, $dictionary): void
+    public function testGenerateExistingEmptyValidCatalog($content, $dictionary)
     {
         $configFile = 'test';
 
-        $fileMock1 = $this->createMock(Read::class);
-        $fileMock1->expects($this->once())
+        $fileMock = $this->createMock(Read::class);
+        $fileMock->expects($this->once())
             ->method('readAll')
             ->withAnyParameters()
             ->willReturn('');
 
-        $fileMock2 = $this->createMock(Write::class);
-        $fileMock2->expects($this->once())
+        $this->fileWriteFactoryMock->expects($this->at(0))
+            ->method('create')
+            ->with(
+                $configFile,
+                DriverPool::FILE,
+                VsCode::FILE_MODE_READ
+            )
+            ->willReturn($fileMock);
+
+        $fileMock = $this->createMock(Write::class);
+        $fileMock->expects($this->once())
             ->method('write')
             ->with($content);
 
-        $this->fileWriteFactoryMock
+        $this->fileWriteFactoryMock->expects($this->at(1))
             ->method('create')
-            ->withConsecutive(
-                [$configFile, DriverPool::FILE, VsCode::FILE_MODE_READ],
-                [$configFile, DriverPool::FILE, VsCode::FILE_MODE_WRITE]
+            ->with(
+                $configFile,
+                DriverPool::FILE,
+                VsCode::FILE_MODE_WRITE
             )
-            ->willReturnOnConsecutiveCalls($fileMock1, $fileMock2);
+            ->willReturn($fileMock);
 
         $this->vscodeFormat->generateCatalog($dictionary, $configFile);
     }
 
     /**
-     * Test modify existing invalid catalog.
+     * Test modify existing invalid catalog
      *
      * @param string $content
      * @param array $dictionary
-     *
-     * @return void
      * @dataProvider dictionaryDataProvider
+     * @return void
      */
-    public function testGenerateExistingInvalidValidCatalog($content, $dictionary, $invalidContent): void
+    public function testGenerateExistingInvalidValidCatalog($content, $dictionary, $invalidContent)
     {
         $configFile = 'test';
 
-        $fileMock1 = $this->createMock(Read::class);
-        $fileMock1->expects($this->once())
+        $fileMock = $this->createMock(Read::class);
+        $fileMock->expects($this->once())
             ->method('readAll')
             ->withAnyParameters()
             ->willReturn($invalidContent);
 
-        $fileMock2 = $this->createMock(Write::class);
-        $fileMock2->expects($this->once())
+        $this->fileWriteFactoryMock->expects($this->at(0))
+            ->method('create')
+            ->with(
+                $configFile,
+                DriverPool::FILE,
+                VsCode::FILE_MODE_READ
+            )
+            ->willReturn($fileMock);
+
+        $fileMock = $this->createMock(Write::class);
+        $fileMock->expects($this->once())
             ->method('write')
             ->with($content);
 
-        $this->fileWriteFactoryMock
+        $this->fileWriteFactoryMock->expects($this->at(1))
             ->method('create')
-            ->withConsecutive(
-                [$configFile, DriverPool::FILE, VsCode::FILE_MODE_READ],
-                [$configFile, DriverPool::FILE, VsCode::FILE_MODE_WRITE]
+            ->with(
+                $configFile,
+                DriverPool::FILE,
+                VsCode::FILE_MODE_WRITE
             )
-            ->willReturnOnConsecutiveCalls($fileMock1, $fileMock2);
+            ->willReturn($fileMock);
 
         $this->vscodeFormat->generateCatalog($dictionary, $configFile);
     }
 
     /**
-     * Data provider for test.
+     * Data provider for test
      *
      * @return array
      */
-    public function dictionaryDataProvider(): array
+    public function dictionaryDataProvider()
     {
         $fixtureXmlFile = __DIR__ . '/_files/valid_catalog.xml';
         $content = file_get_contents($fixtureXmlFile);
@@ -244,10 +270,10 @@ class VsCodeTest extends TestCase
                     'urn:magento:module:Magento_Store:etc/config.xsd' => 'vendor/magento/module-store/etc/config.xsd',
                     'urn:magento:module:Magento_Cron:etc/crontab.xsd' => 'vendor/magento/module-cron/etc/crontab.xsd',
                     'urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd' =>
-                        'vendor/magento/framework/Setup/Declaration/Schema/etc/schema.xsd'
+                        'vendor/magento/framework/Setup/Declaration/Schema/etc/schema.xsd',
                 ],
-                $invalidContent
-            ]
+                $invalidContent,
+            ],
         ];
     }
 }

@@ -3,23 +3,18 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Developer\Model\Logger\Handler;
 
-use Exception;
 use Magento\Config\Setup\ConfigOptionsList;
-use Magento\Framework\App\DeploymentConfig;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\State;
-use Magento\Framework\Exception\FileSystemException;
-use Magento\Framework\Exception\RuntimeException;
 use Magento\Framework\Filesystem\DriverInterface;
-use Magento\Framework\Logger\Handler\Debug as DebugHandler;
+use Magento\Framework\App\DeploymentConfig;
 
 /**
  * Enable/disable debug logging based on the store config setting
  */
-class Debug extends DebugHandler
+class Debug extends \Magento\Framework\Logger\Handler\Debug
 {
     /**
      * @var State
@@ -35,14 +30,14 @@ class Debug extends DebugHandler
      * @param DriverInterface $filesystem
      * @param State $state
      * @param DeploymentConfig $deploymentConfig
-     * @param string|null $filePath
-     * @throws Exception
+     * @param string $filePath
+     * @throws \Exception
      */
     public function __construct(
         DriverInterface $filesystem,
         State $state,
         DeploymentConfig $deploymentConfig,
-        ?string $filePath = null
+        $filePath = null
     ) {
         parent::__construct($filesystem, $filePath);
 
@@ -53,34 +48,30 @@ class Debug extends DebugHandler
     /**
      * @inheritdoc
      */
-    public function isHandling(array $record): bool
+    public function isHandling(array $record)
     {
         if ($this->deploymentConfig->isAvailable()) {
-            return parent::isHandling($record) && $this->isLoggingEnabled();
+            return
+                parent::isHandling($record)
+                && $this->isLoggingEnabled();
         }
 
         return parent::isHandling($record);
     }
 
     /**
-     * Check that logging functionality is enabled
+     * Check that logging functionality is enabled.
      *
      * @return bool
-     * @throws FileSystemException
-     * @throws RuntimeException
      */
     private function isLoggingEnabled(): bool
     {
-        $configValue = $this->deploymentConfig->get(
-            ConfigOptionsList::CONFIG_PATH_DEBUG_LOGGING
-        );
-
+        $configValue = $this->deploymentConfig->get(ConfigOptionsList::CONFIG_PATH_DEBUG_LOGGING);
         if ($configValue === null) {
             $isEnabled = $this->state->getMode() !== State::MODE_PRODUCTION;
         } else {
-            $isEnabled = (bool) $configValue;
+            $isEnabled = (bool)$configValue;
         }
-
         return $isEnabled;
     }
 }

@@ -36,9 +36,6 @@ class XmlConverterCommandTest extends TestCase
      */
     private $xsltProcessorFactory;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         if (!function_exists('libxml_set_external_entity_loader')) {
@@ -51,19 +48,15 @@ class XmlConverterCommandTest extends TestCase
         $this->command = new XmlConverterCommand($this->formatter, $this->domFactory, $this->xsltProcessorFactory);
     }
 
-    /**
-     * @return void
-     */
-    public function testExecute(): void
+    public function testExecute()
     {
         $domXml = $this->createMock(\DOMDocument::class);
         $domXsl = clone $domXml;
         $domXml->expects($this->once())->method('load')->with('file.xml');
         $domXsl->expects($this->once())->method('load')->with('file.xsl');
 
-        $this->domFactory
-            ->method('create')
-            ->willReturnOnConsecutiveCalls($domXml, $domXsl);
+        $this->domFactory->expects($this->at(0))->method('create')->willReturn($domXml);
+        $this->domFactory->expects($this->at(1))->method('create')->willReturn($domXsl);
 
         $xsltProcessor = $this->createMock(\XSLTProcessor::class);
         $xsltProcessor->expects($this->once())->method('transformToXml')->with($domXml)->willReturn('XML');
@@ -82,10 +75,7 @@ class XmlConverterCommandTest extends TestCase
         $this->assertStringContainsString('result', $commandTester->getDisplay());
     }
 
-    /**
-     * @return void
-     */
-    public function testWrongParameter(): void
+    public function testWrongParameter()
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('Not enough arguments');
